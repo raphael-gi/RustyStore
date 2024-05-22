@@ -1,0 +1,54 @@
+name: store
+services:
+  frontend:
+    build:
+      context: frontend
+      target: development
+    networks:
+      - client-side
+    ports:
+      - 3000:3000
+    volumes:
+      - ./frontend/src:/code/src:ro
+
+  backend:
+    build:
+      context: backend
+      target: development
+    environment:
+      - ADDRESS=0.0.0.0:8000
+      - RUST_LOG=debug
+      - PG_DBNAME=postgres
+      - PG_HOST=db
+      - PG_USER=root
+      - PG_PASSWORD=root
+    networks:
+      - client-side
+      - server-side
+    volumes:
+      - ./backend/src:/code/src
+      - backend-cache:/code/target
+    depends_on:
+      - db
+
+  db:
+    image: postgres
+    restart: always
+    environment:
+      - POSTGRES_USER=root
+      - POSTGRES_PASSWORD=root
+      - POSTGRES_DB=store
+    networks:
+      - server-side
+    ports:
+      - 5432:5432
+    volumes:
+    - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+
+networks:
+  client-side: {}
+  server-side: {}
+
+volumes:
+  backend-cache: {}
+  db-data: {}

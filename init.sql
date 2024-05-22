@@ -8,5 +8,7 @@ CREATE TABLE customer (
 CREATE TABLE product (
   id UUID NOT NULL DEFAULT gen_random_uuid(),
   name VARCHAR(90),
+  price MONEY NOT NULL,
+  description TEXT,
   CONSTRAINT product_pk PRIMARY KEY (id)
 );
