@@ -1,0 +1,71 @@
+name: store
+services:
+  frontend:
+    command: bash -c "cd app/frontend && trunk serve --address 0.0.0.0 --port ${TRUNK_SERVE_PORT:-80}"
+    environment:
+      - ACTIX_PORT=${ACTIX_PORT:-8080}
+      - TRUNK_SERVE_PORT=${TRUNK_SERVE_PORT:-80}
+      - ENABLE_OAUTH=true
+      - LOGIN_URL=http://localhost:${ACTIX_PORT:-8080}/login
+    ports:
+      - "${TRUNK_SERVE_PORT:-80}:${TRUNK_SERVE_PORT:-80}"
+
+    build:
+      context: frontend
+    networks:
+      - client-side
+    volumes:
+      - type: bind
+        source: .
+        target: /app
+      - frontend-target-cache:/app/frontend/target
+      - frontend-cargo-registry-cache:/usr/local/cargo/registry
+
+  backend:
+    build:
+      context: backend
+    environment:
+      - ADDRESS=0.0.0.0:8080
+      - RUST_LOG=debug
+      - PG_DBNAME=store
+      - PG_HOST=db
+      - PG_USER=root
+      - PG_PASSWORD=root
+    ports:
+      - "${ACTIX_PORT:-8080}:${ACTIX_PORT:-8080}"
+
+    networks:
+      - client-side
+      - server-side
+    volumes:
+      - type: bind
+        source: .
+        target: /app
+      - backend-target-cache:/app/backend/target
+      - backend-cargo-registry-cache:/usr/local/cargo/registry
+    depends_on:
+      - db
+
+  db:
+    image: postgres
+    restart: always
+    environment:
+      - POSTGRES_USER=root
+      - POSTGRES_PASSWORD=root
+      - POSTGRES_DB=store
+    networks:
+      - server-side
+    ports:
+      - 5432:5432
+    volumes:
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+
+networks:
+  client-side: {}
+  server-side: {}
+
+volumes:
+  backend-cargo-registry-cache:
+  backend-target-cache:
+  frontend-target-cache:
+  frontend-cargo-registry-cache:
