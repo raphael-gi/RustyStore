@@ -11,7 +11,7 @@ COPY Cargo.toml /code/Cargo.toml
 RUN cargo fetch
 COPY . /code
 
-FROM base AS development
+FROM base
 
 EXPOSE 8000
 

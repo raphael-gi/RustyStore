@@ -1,21 +1,16 @@
-# syntax=docker/dockerfile:1.4
-FROM node:lts AS development
+FROM node:lts
 
-ENV CI=true
-ENV PORT=3000
+WORKDIR /app
 
-WORKDIR /code
-COPY package.json /code/package.json
-COPY package-lock.json /code/package-lock.json
+COPY package.json .
+COPY package-lock.json .
+
 RUN npm ci
-COPY . /code
 
-CMD [ "npm", "run", "dev" ]
-
-FROM development AS builder
+COPY . .
 
 RUN npm run build
 
-FROM nginx:1.13-alpine
+EXPOSE 3000
 
-COPY --from=builder /code/build /usr/share/nginx/html
+CMD [ "npm", "start" ]

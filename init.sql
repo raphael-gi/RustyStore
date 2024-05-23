@@ -1,14 +1,16 @@
 CREATE TABLE customer (
-  id UUID NOT NULL DEFAULT gen_random_uuid(),
+  id SERIAL PRIMARY KEY,
   username VARCHAR(45),
-  email VARCHAR(90),
-  CONSTRAINT customer_pk PRIMARY KEY (id)
+  password
 );
 
 CREATE TABLE product (
-  id UUID NOT NULL DEFAULT gen_random_uuid(),
+  id SERIAL PRIMARY KEY,
   name VARCHAR(90),
   price MONEY NOT NULL,
-  description TEXT,
-  CONSTRAINT product_pk PRIMARY KEY (id)
+  description TEXT
 );
+
+INSERT INTO customer (username, email)
+VALUES ('Chris Bumstead', '@christest');
+
