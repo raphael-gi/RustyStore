@@ -1,7 +1,6 @@
-use std::io::ErrorKind;
-
-use actix_web::{get, post, web::{Data, Json}, HttpResponse, Responder};
+use actix_web::{get, post, web::{Data, Form, Json}, HttpResponse, Responder};
 use deadpool_postgres::{Object, Pool};
+use serde::Deserialize;
 use crate::entities::{Product, Customer};
 
 #[get("/user")]
@@ -31,16 +30,30 @@ async fn get_product() -> impl Responder {
     Json(product)
 }
 
+#[derive(Deserialize)]
+struct LoginForm {
+    username: String,
+    email: String,
+    password: String
+}
+
 #[post("/register")]
-async fn register_user(pool: Data<Pool>, username: String, password: String) -> HttpResponse {
-    if username.len() > 45 {
+async fn register_user(pool: Data<Pool>, form: Form<LoginForm>) -> HttpResponse {
+    let username: String = form.username.to_string();
+    let email: String = form.email.to_string();
+    let password: String = form.password.to_string();
+
+    if username.len() >= 45 {
         return HttpResponse::BadRequest().body("Username must be shorter than 45 characters");
     }
     if username.len() < 3 {
-        return HttpResponse::BadRequest().body("Username must be longer than 3 characters");
+        return HttpResponse::BadRequest().body("Username must be longer than 2 characters");
+    }
+    if email.len() >= 90 {
+        return HttpResponse::BadRequest().body("Email must be shorter than 90 characters");
     }
     if password.len() < 8 {
-        return HttpResponse::BadRequest().body("Password must be longer than 8 characters");
+        return HttpResponse::BadRequest().body("Password must be longer than 7 characters");
     }
 
     let client = match get_client(pool).await {
@@ -48,10 +61,7 @@ async fn register_user(pool: Data<Pool>, username: String, password: String) -> 
         Err(err) => return err
     };
 
-    match Customer::register(&**client, username, password).await {
-        Ok(created_user) => HttpResponse::Ok().json(created_user),
-        Err(err) => 
-    }
+    Customer::register(&**client, username, email, password).await
 }
 
 

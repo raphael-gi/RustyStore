@@ -3,12 +3,10 @@ services:
   frontend:
     build:
       context: frontend
-    networks:
-      - client-side
     ports:
       - 3000:3000
-    volumes:
-      - ./frontend/src:/code/src:ro
+    networks:
+      - client-side
 
   backend:
     build:
@@ -44,7 +42,8 @@ services:
     - ./init.sql:/docker-entrypoint-initdb.d/init.sql
 
 networks:
-  client-side: {}
+  client-side:
+    driver: bridge
   server-side: {}
 
 volumes:
