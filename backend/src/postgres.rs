@@ -3,12 +3,7 @@ use tokio_postgres::NoTls;
 
 fn create_config() -> Config {
     let mut cfg = Config::new();
-    cfg.host = Some("db".to_string());
-    cfg.user = Some("root".to_string());
-    cfg.password = Some("root".to_string());
-    cfg.dbname = Some("store".to_string());
 
-    /*
     if let Ok(host) = std::env::var("PG_HOST") {
         cfg.host = Some(host);
     }
@@ -21,7 +16,7 @@ fn create_config() -> Config {
     if let Ok(password) = std::env::var("PG_PASSWORD") {
         cfg.password = Some(password);
     }
-    */
+
     cfg
 }
 

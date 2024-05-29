@@ -14,8 +14,8 @@ services:
     environment:
       - ADDRESS=0.0.0.0:8000
       - RUST_LOG=debug
-      - PG_DBNAME=postgres
       - PG_HOST=db
+      - PG_DBNAME=store
       - PG_USER=root
       - PG_PASSWORD=root
     networks:
