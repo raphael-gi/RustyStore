@@ -1,5 +1,5 @@
 use actix_web::HttpResponse;
-use bcrypt::hash;
+use bcrypt::{hash, verify};
 use serde::Serialize;
 use tokio_postgres::{Error, GenericClient, Row};
 
@@ -53,5 +53,32 @@ impl Customer {
                 }
             }
         }
+    }
+
+    pub async fn login<C: GenericClient>(client: &C, username: String, password: String) -> HttpResponse {
+        let stmt = match client.prepare("SELECT password FROM customer WHERE username = $1 OR email = $2").await {
+            Ok(stmt) => stmt,
+            Err(..) => return HttpResponse::InternalServerError().into()
+        };
+        let rows = match client.query(&stmt, &[&username, &username]).await {
+            Ok(rows) => rows,
+            Err(..) => return HttpResponse::InternalServerError().into()
+        };
+
+        let found_password: String = match rows.into_iter().next() {
+            Some(found_row) => found_row.get("password"),
+            None => return HttpResponse::BadRequest().body("User not found")
+        };
+
+        let is_correct = match verify(password, &found_password) {
+            Ok(result) => result,
+            Err(..) => return HttpResponse::InternalServerError().body("Couldn't verify password")
+        };
+
+        if !is_correct {
+            return HttpResponse::BadRequest().json("Password incorrect");
+        }
+
+        HttpResponse::Ok().body("token")
     }
 }
