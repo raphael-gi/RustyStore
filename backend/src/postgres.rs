@@ -23,5 +23,5 @@ fn create_config() -> Config {
 pub fn create_pool() -> Pool {
     create_config()
         .create_pool(Some(Runtime::Tokio1), NoTls)
-        .expect("couldn't create postgres pool")
+        .expect("Couldn't create postgres pool")
 }

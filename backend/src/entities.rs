@@ -42,7 +42,7 @@ impl Customer {
             Err(..) => return HttpResponse::InternalServerError().json("Failed to hash password")
         };
         match client.query("CALL register($1,$2,$3)", &[&username, &email, &password_hash]).await {
-            Ok(..) => HttpResponse::Ok().into(),
+            Ok(..) => HttpResponse::Ok().insert_header(("Authorization", "Bearer ")).finish(),
             Err(err) => {
                 match err.as_db_error() {
                     Some(err) => HttpResponse::BadRequest().json(DatabaseError {
