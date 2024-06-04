@@ -1,3 +1,4 @@
+use std::env::var;
 use actix_web::HttpResponse;
 use bcrypt::{hash, verify};
 use jwt_kenji::JWT;
@@ -103,16 +104,18 @@ impl Customer {
             return HttpResponse::BadRequest().json("Password incorrect");
         }
 
-        let id: i32 = found_row.get("id");
+        if let Ok(jwt_secret) = var("JWT_SECRET") {
+            let id: i32 = found_row.get("id");
+            let jwt = JWT::new(jwt_secret.to_string())
+                .add_header("alg", "kenji_hash")
+                .add_header("typ", "JWT")
+                .add_payload("id", &id.to_string())
+                .add_payload("username", &username)
+                .add_payload("email", found_row.get("email"))
+                .build();
+            return HttpResponse::Ok().insert_header(("Authorization", format!("Bearer {}", jwt))).finish();
+        }
 
-        let jwt = JWT::new("heheheha".to_string())
-            .add_header("alg", "kenji_hash")
-            .add_header("typ", "JWT")
-            .add_payload("id", &id.to_string())
-            .add_payload("username", &username)
-            .add_payload("email", found_row.get("email"))
-            .build();
-
-        HttpResponse::Ok().insert_header(("Authorization", format!("Bearer {}", jwt))).finish()
+        HttpResponse::InternalServerError().finish()
     }
 }

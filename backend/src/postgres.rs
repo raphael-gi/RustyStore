@@ -1,19 +1,20 @@
+use std::env::var;
 use deadpool_postgres::{Config, Pool, Runtime};
 use tokio_postgres::NoTls;
 
 fn create_config() -> Config {
     let mut cfg = Config::new();
 
-    if let Ok(host) = std::env::var("PG_HOST") {
+    if let Ok(host) = var("PG_HOST") {
         cfg.host = Some(host);
     }
-    if let Ok(dbname) = std::env::var("PG_DBNAME") {
+    if let Ok(dbname) = var("PG_DBNAME") {
         cfg.dbname = Some(dbname);
     }
-    if let Ok(user) = std::env::var("PG_USER") {
+    if let Ok(user) = var("PG_USER") {
         cfg.user = Some(user);
     }
-    if let Ok(password) = std::env::var("PG_PASSWORD") {
+    if let Ok(password) = var("PG_PASSWORD") {
         cfg.password = Some(password);
     }
 

@@ -1,5 +1,7 @@
-use actix_web::{get, post, web::{Data, Form}, HttpResponse};
+use std::env::var;
+use actix_web::{get, post, web::{Data, Form}, HttpRequest, HttpResponse};
 use deadpool_postgres::{Object, Pool};
+use jwt_kenji::JWT;
 use serde::Deserialize;
 use crate::entities::{Customer, Product};
 
@@ -22,22 +24,41 @@ pub async fn get_user(pool: Data<Pool>) -> HttpResponse {
 }
 
 #[get("/products")]
-async fn get_products(pool: Data<Pool>) -> HttpResponse {
+async fn get_products(pool: Data<Pool>, req: HttpRequest) -> HttpResponse {
+    let token = match verify_token(&req) {
+        Ok(token) => token,
+        Err(err) => return err
+    };
+
+    if let Ok(jwt_secret) = var("JWT_SECRET") {
+        if !JWT::verify(token.to_string(), jwt_secret.to_string()) {
+            return HttpResponse::BadRequest().body("JWT not valid");
+        }
+    } else {
+        return HttpResponse::InternalServerError().body("Failed");
+    }
+
     let client = match pool.get().await {
         Ok(client) => client,
-        Err(err) => {
-            println!("{}", err);
-            return HttpResponse::InternalServerError().json("unable to get postgres client");
-        }
+        Err(..) => return HttpResponse::InternalServerError().json("unable to get postgres client")
     };
 
     match Product::get_top(&**client).await {
         Ok(list) => HttpResponse::Ok().json(list),
-        Err(err) => {
-            println!("{}", err);
-            return HttpResponse::InternalServerError().body("unable to fetch products");
-        }
+        Err(..) => return HttpResponse::InternalServerError().body("unable to fetch products")
     }
+}
+
+fn verify_token(req: &HttpRequest) -> Result<&str, HttpResponse> {
+    let auth_header: &str = match req.headers().get("Authorization") {
+        Some(jwt) => jwt.to_str().unwrap(),
+        None => return Err(HttpResponse::BadRequest().body("No JWT provided"))
+    };
+    let token = match auth_header.split(" ").last() {
+        Some(token) => token,
+        None => return Err(HttpResponse::BadRequest().body("No token provided"))
+    };
+    Ok(token)
 }
 
 #[derive(Deserialize)]

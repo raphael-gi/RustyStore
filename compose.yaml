@@ -18,6 +18,7 @@ services:
       - PG_DBNAME=store
       - PG_USER=root
       - PG_PASSWORD=root
+      - JWT_SECRET=xackqKu3Ok5x-Ug9FW9vR4QIPIwiyCxVB46gQBed_9NykuB89kkhqMUoQjjn-lDn08zdYY8ioWv61LRKoAR7rD1TfyPHjrx-xFufgMpyvVIN-r5yHu9c8bj_71PenlWlGtCdqLch7Z1ssLZiNrH_sr1xTKIruMuyZETMlGuznwE
     networks:
       - client-side
       - server-side

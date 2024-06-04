@@ -9,11 +9,15 @@ type Product = {
 }
 
 function Products() {
-
   const [products, setProducts] = useState<Product[]|undefined>(undefined);
 
   useEffect(() => {
-    fetch('/api/products')
+      const jwt: string = localStorage.getItem("jwt") || "";
+      fetch('/api/products', {
+          headers: {
+              Authorization: jwt
+          }
+      })
       .then((res) => res.json())
       .then((data: Product[]) => setProducts(data));
   }, []);

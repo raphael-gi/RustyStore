@@ -1,4 +1,4 @@
-import path from 'path'
+import path from 'path';
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 
@@ -19,7 +19,7 @@ export default defineConfig({
         target: "http://backend:8000",
         changeOrigin: true,
         secure: false,
-        rewrite: (path) => path.replace(/^\/api/, '')}
+        rewrite: (path: any) => path.replace(/^\/api/, '')}
     }
   }
 })
