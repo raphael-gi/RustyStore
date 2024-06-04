@@ -1,7 +1,0 @@
-[package]
-name = "jwt-kenji"
-version = "0.1.0"
-edition = "2021"
-
-[dependencies]
-base64-kenji = { path = "base64-kenji" }

@@ -1,5 +1,5 @@
 use actix_web::{main, web::Data, App, HttpServer};
-use routes::{get_product, get_user, login_user, register_user};
+use routes::{get_products, get_user, login_user, register_user};
 
 mod postgres;
 mod routes;
@@ -16,7 +16,7 @@ async fn main() -> std::io::Result<()> {
         App::new()
             .app_data(Data::new(pg_pool.clone()))
             .service(get_user)
-            .service(get_product)
+            .service(get_products)
             .service(register_user)
             .service(login_user)
     })

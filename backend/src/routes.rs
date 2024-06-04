@@ -1,7 +1,7 @@
-use actix_web::{get, post, web::{Data, Form, Json}, HttpResponse, Responder};
+use actix_web::{get, post, web::{Data, Form}, HttpResponse};
 use deadpool_postgres::{Object, Pool};
 use serde::Deserialize;
-use crate::entities::{Product, Customer};
+use crate::entities::{Customer, Product};
 
 #[get("/user")]
 pub async fn get_user(pool: Data<Pool>) -> HttpResponse {
@@ -21,13 +21,23 @@ pub async fn get_user(pool: Data<Pool>) -> HttpResponse {
     }
 }
 
-#[get("/product")]
-async fn get_product() -> impl Responder {
-    let product = Product {
-        name: "Barbell".to_string()
+#[get("/products")]
+async fn get_products(pool: Data<Pool>) -> HttpResponse {
+    let client = match pool.get().await {
+        Ok(client) => client,
+        Err(err) => {
+            println!("{}", err);
+            return HttpResponse::InternalServerError().json("unable to get postgres client");
+        }
     };
 
-    Json(product)
+    match Product::get_top(&**client).await {
+        Ok(list) => HttpResponse::Ok().json(list),
+        Err(err) => {
+            println!("{}", err);
+            return HttpResponse::InternalServerError().body("unable to fetch products");
+        }
+    }
 }
 
 #[derive(Deserialize)]

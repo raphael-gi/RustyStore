@@ -8,7 +8,7 @@ CREATE TABLE customer (
 CREATE TABLE product (
   id SERIAL PRIMARY KEY,
   name VARCHAR(90),
-  price MONEY NOT NULL,
+  price DECIMAL NOT NULL,
   description TEXT
 );
 

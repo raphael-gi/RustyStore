@@ -1,16 +1,26 @@
 import React from 'react'
 import ReactDOM from 'react-dom/client'
-import { RouterProvider, createBrowserRouter } from 'react-router-dom'
+import { Navigate, Outlet, RouterProvider, createBrowserRouter } from 'react-router-dom'
 import './index.css'
-import App from './App.tsx'
 import AuthLayout from './auth/AuthLayout.tsx'
 import SignUp from './auth/SignUp.tsx'
 import SignIn from './auth/SignIn.tsx'
+import Products from './Products.tsx'
+
+const PrivateRoutes = () => {
+  return localStorage.getItem("jwt") ? <Outlet /> : <Navigate to="/auth" />
+}
 
 const router = createBrowserRouter([
   {
     path: "/",
-    element: <App />
+    element: <PrivateRoutes />,
+    children: [
+      {
+        path: "/",
+        element: <Products />
+      }
+    ]
   },
   {
     path: "/auth",

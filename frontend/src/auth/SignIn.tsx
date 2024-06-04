@@ -20,23 +20,31 @@ function SignIn() {
     }
   });
 
+  const errorHandling = async (res: Response): Promise<string|void> => {
+    if (!res.ok) {
+      return await res.text();
+    }
+    const jwt = res.headers.get("authorization");
+    if (!jwt) {
+      return "Couldn't verify user";
+    }
+    localStorage.setItem("jwt", jwt);
+  }
+
   const handleSubmit = async (data: FormData) => {
     const bodyData = new URLSearchParams(data);
 
     try {
-      const res = await fetch("/api/login", {
+      const res: Response = await fetch("/api/login", {
         method: "POST",
         body: bodyData
       });
-
-      if (res.ok) {
-        const jwt = await res.text();
-        console.log(jwt);
-        navigate("/");
-      } else {
-        const message = await res.text();
-        console.error(message);
+      const errors: string|void = await errorHandling(res);
+      if (errors) {
+        console.error(errors);
+        return;
       }
+      navigate("/");
     } catch (err) {
       console.error(err);
     }
