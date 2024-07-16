@@ -6,6 +6,10 @@ import AuthLayout from './auth/AuthLayout.tsx'
 import SignUp from './auth/SignUp.tsx'
 import SignIn from './auth/SignIn.tsx'
 import Products from './Products.tsx'
+import Product from './Product.tsx'
+import { QueryClient, QueryClientProvider } from 'react-query'
+
+const queryClient = new QueryClient();
 
 const PrivateRoutes = () => {
   return localStorage.getItem("jwt") ? <Outlet /> : <Navigate to="/auth" />
@@ -18,7 +22,19 @@ const router = createBrowserRouter([
     children: [
       {
         path: "/",
-        element: <Products />
+        element: (
+          <QueryClientProvider client={queryClient}>
+            <Products />
+          </QueryClientProvider>
+        )
+      },
+      {
+        path: "product/:id",
+        element: (
+          <QueryClientProvider client={queryClient}>
+            <Product />
+          </QueryClientProvider>
+        )
       }
     ]
   },

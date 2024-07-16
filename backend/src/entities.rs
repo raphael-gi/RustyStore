@@ -1,5 +1,5 @@
 use std::env::var;
-use actix_web::HttpResponse;
+use actix_web::{http::header::ContentType, HttpResponse};
 use bcrypt::{hash, verify};
 use jwt_kenji::JWT;
 use serde::Serialize;
@@ -19,6 +19,24 @@ impl Product {
         let stmt = client.prepare("SELECT id, name, price, description FROM product LIMIT 20").await?;
         let rows = client.query(&stmt, &[]).await?;
         Ok(rows.into_iter().map(Product::from).collect::<Vec<Product>>())
+    }
+
+    pub async fn get<C: GenericClient>(client: &C, id: i32) -> Result<Product, HttpResponse> {
+        let rows = match Self::get_product(client, id).await {
+            Ok(rows) => rows,
+            Err(..) => return Err(HttpResponse::InternalServerError().finish())
+        };
+        let product_row = match rows.into_iter().next() {
+            Some(product_row) => product_row,
+            None => return Err(HttpResponse::BadRequest().content_type(ContentType::plaintext()).body("Product not found"))
+        };
+
+        Ok(Product::from(product_row))
+    }
+
+    async fn get_product<C: GenericClient>(client: &C, id: i32) -> Result<Vec<Row>, Error> {
+        let stmt = client.prepare("SELECT id, name, price, description FROM product WHERE id = $1").await?;
+        Ok(client.query(&stmt, &[&id]).await)?
     }
 
     fn from(row: Row) -> Self {

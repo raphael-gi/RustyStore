@@ -1,25 +1,54 @@
 use std::env::var;
-use actix_web::{get, post, web::{Data, Form}, HttpRequest, HttpResponse};
+use actix_web::{error::{self}, get, http::header::ContentType, post, web::{Data, Form, Json, Path}, HttpRequest, HttpResponse};
 use deadpool_postgres::{Object, Pool};
 use jwt_kenji::JWT;
 use serde::Deserialize;
+use derive_more::{Display,Error};
 use crate::entities::{Customer, Product};
 
 #[get("/user")]
 pub async fn get_user(pool: Data<Pool>) -> HttpResponse {
     let client = match pool.get().await {
         Ok(client) => client,
-        Err(err) => {
-            println!("{}", err);
-            return HttpResponse::InternalServerError().json("unable to get postgres client");
-        }
+        Err(..) => return HttpResponse::InternalServerError().body("unable to get postgres client")
     };
     match Customer::all(&**client).await {
         Ok(list) => HttpResponse::Ok().json(list),
-        Err(err) => {
-            println!("{}", err);
-            return HttpResponse::InternalServerError().json("unable to fetch users");
+        Err(..) => return HttpResponse::InternalServerError().body("unable to fetch users")
+    }
+}
+
+#[derive(Debug, Display, Error)]
+enum MyError {
+    #[display(fmt = "internal error")]
+    InternalError,
+
+    #[display(fmt = "bad request")]
+    BadClientData,
+}
+
+impl error::ResponseError for MyError {
+    fn error_response(&self) -> HttpResponse {
+        match self {
+            Self::InternalError => {},
+            Self::BadClientData => {}
         }
+        HttpResponse::BadRequest()
+            .content_type(ContentType::plaintext())
+            .body(self.to_string())
+    }
+}
+
+#[get("/product/{id}")]
+async fn get_product(pool: Data<Pool>, id: Path<i32>) -> Result<Json<Product>, MyError> {
+    let client = match pool.get().await {
+        Ok(client) => client,
+        Err(..) => return Err(MyError::InternalError)
+    };
+
+    match Product::get(&**client, *id).await {
+        Ok(product) => Ok(Json(product)),
+        Err(_err) => Err(MyError::BadClientData)
     }
 }
 
